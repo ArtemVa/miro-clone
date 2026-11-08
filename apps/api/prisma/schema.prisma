@@ -1,0 +1,23 @@
+// Схема БД api. После изменения: pnpm db:migrate --name <что поменяли>
+// Таблицы и колонки в базе — в snake_case (@map), в коде — в camelCase.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  // id генерирует база (uuidv7() из Postgres 18), поэтому он есть и у записей, вставленных не через Prisma
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  name      String   @db.VarChar(100)
+  email     String   @unique
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  // Для сортировки списка по умолчанию: ORDER BY created_at, id
+  @@index([createdAt, id])
+  @@map("users")
+}
