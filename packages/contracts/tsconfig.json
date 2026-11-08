@@ -1,0 +1,9 @@
+{
+  "extends": "@repo/typescript-config/base.json",
+  "compilerOptions": {
+    // Пустой types: contracts не видит ни Node, ни DOM — только zod.
+    // Так фронт и бэк могут импортировать его без сюрпризов.
+    "types": []
+  },
+  "include": ["src"]
+}

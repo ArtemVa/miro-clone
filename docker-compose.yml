@@ -1,0 +1,31 @@
+# Локальная инфраструктура для разработки.
+# Запуск: docker compose up -d    Остановка: docker compose stop
+# Удалить вместе с данными БД: docker compose down -v
+#
+# Значения по умолчанию можно переопределить в файле .env рядом с этим файлом,
+# например POSTGRES_PORT=5433, если 5432 уже занят. Тогда поменяйте порт и в apps/api/.env.
+
+name: miro-clone
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-app}
+      POSTGRES_DB: ${POSTGRES_DB:-app}
+    ports:
+      # Только localhost: база не должна быть видна из сети
+      - '127.0.0.1:${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      # С Postgres 18 данные лежат в /var/lib/postgresql/18/docker, volume монтируется на уровень выше
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres-data:

@@ -1,0 +1,12 @@
+node_modules
+dist
+coverage
+.turbo
+*.log
+
+.env
+.env.*
+!.env.example
+
+# Клиент Prisma, генерируется из apps/api/prisma/schema.prisma
+apps/api/src/generated/
