@@ -1,0 +1,3 @@
+# Prettier пишет LF, а у Windows-разработчиков core.autocrlf=true превращает его в CRLF.
+# Фиксируем LF в репозитории и в рабочей копии для всех текстовых файлов.
+* text=auto eol=lf
