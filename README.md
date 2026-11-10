@@ -9,7 +9,7 @@ apps/
 packages/
   contracts/            zod-схемы и типы — общий контракт фронта и бэка
   typescript-config/    общий tsconfig
-docker-compose.yml      Postgres для локальной разработки
+docker-compose.yml      Postgres и Redis для локальной разработки
 ```
 
 ## Старт
@@ -20,7 +20,7 @@ docker-compose.yml      Postgres для локальной разработки
 nvm install 24 && nvm use 24              # на Windows (nvm-windows) версию указываем явно
 pnpm install                              # заодно ставит git-хуки
 cp apps/api/.env.example apps/api/.env
-docker compose up -d                      # Postgres на localhost:5432
+docker compose up -d                      # Postgres на localhost:5432, Redis на localhost:6379
 pnpm db:migrate                           # применить миграции к локальной базе
 pnpm db:seed                              # тестовые данные, по желанию
 pnpm dev                                  # api http://localhost:3000 и web http://localhost:5173
