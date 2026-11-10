@@ -21,6 +21,10 @@ pnpm db:deploy                      # применить миграции, не 
 pnpm db:generate                    # пересоздать клиент Prisma, если редактор не видит новых полей
 ```
 
+## Миграции в Docker
+
+В контейнерах миграции применяет одноразовый сервис `migrate` (профиль `app` в `docker-compose.yml`). Он собирается из стадии `migrate` в `apps/api/Dockerfile`, где стоят все зависимости, включая Prisma CLI, и запускает `pnpm db:deploy`. Сервис `api` стартует только после того, как `migrate` завершился без ошибок. Поэтому `prisma` остаётся в devDependencies.
+
 ## Как менять схему
 
 1. Меняем `schema.prisma`.
