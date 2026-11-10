@@ -9,7 +9,7 @@ apps/
 packages/
   contracts/            zod-схемы и типы — общий контракт фронта и бэка
   typescript-config/    общий tsconfig
-docker-compose.yml      Postgres и Redis для локальной разработки
+docker-compose.yml      Postgres, Redis и MinIO для локальной разработки
 ```
 
 ## Старт
@@ -20,11 +20,21 @@ docker-compose.yml      Postgres и Redis для локальной разраб
 nvm install 24 && nvm use 24              # на Windows (nvm-windows) версию указываем явно
 pnpm install                              # заодно ставит git-хуки
 cp apps/api/.env.example apps/api/.env
-docker compose up -d                      # Postgres на localhost:5432, Redis на localhost:6379
+docker compose up -d                      # Postgres, Redis и MinIO, адреса — ниже
 pnpm db:migrate                           # применить миграции к локальной базе
 pnpm db:seed                              # тестовые данные, по желанию
 pnpm dev                                  # api http://localhost:3000 и web http://localhost:5173
 ```
+
+Сервисы из `docker-compose.yml`:
+
+| Сервис     | Адрес                                                      | Доступ                                   |
+| ---------- | ---------------------------------------------------------- | ---------------------------------------- |
+| Postgres   | `localhost:5432`                                           | `app` / `app`, база `app`                |
+| Redis      | `redis://localhost:6379`                                   | без пароля                               |
+| MinIO (S3) | API `http://localhost:9000`, консоль http://localhost:9001 | `minioadmin` / `minioadmin`, бакет `app` |
+
+Бакет создаётся сам при `docker compose up -d`. Порты и пароли можно поменять в `.env` рядом с `docker-compose.yml`, названия переменных — в самом `docker-compose.yml`.
 
 ## Команды
 
