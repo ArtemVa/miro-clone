@@ -9,7 +9,7 @@ apps/
 packages/
   contracts/            zod-схемы и типы — общий контракт фронта и бэка
   typescript-config/    общий tsconfig
-docker-compose.yml      Postgres, Redis и MinIO для локальной разработки
+docker-compose.yml      Postgres, Redis, MinIO и всё приложение в контейнерах
 ```
 
 ## Старт
@@ -35,6 +35,21 @@ pnpm dev                                  # api http://localhost:3000 и web htt
 | MinIO (S3) | API `http://localhost:9000`, консоль http://localhost:9001 | `minioadmin` / `minioadmin`, бакет `app` |
 
 Бакет создаётся сам при `docker compose up -d`. Порты и пароли можно поменять в `.env` рядом с `docker-compose.yml`, названия переменных есть в самом `docker-compose.yml`.
+
+## Всё приложение в Docker
+
+```sh
+docker compose --profile app up -d --build   # http://localhost:8080, порт меняется через APP_PORT
+docker compose --profile app stop
+```
+
+Что запускается вдобавок к сервисам выше:
+
+- `migrate` применяет миграции и завершается;
+- `api` стартует после миграций;
+- `web`: nginx отдаёт собранный фронт и проксирует `/api` и `/ws` на api.
+
+Для разработки удобнее `pnpm dev`: код пересобирается на лету.
 
 ## Команды
 
