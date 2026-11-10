@@ -58,6 +58,7 @@ pnpm format          # Prettier по всему репозиторию
 - [Соглашения API](docs/api-conventions.md)
 - [База данных](docs/database.md)
 - [Структура бэка](docs/backend-structure.md)
+- [Права](docs/permissions.md)
 - [Фронтенд](docs/frontend.md)
 
 ## Правила

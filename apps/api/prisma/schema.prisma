@@ -17,7 +17,112 @@ model User {
   email     String   @unique
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
+  workspaceMemberships WorkspaceMember[]
+  boardMemberships     BoardMember[]
+  createdBoards        Board[]           @relation("BoardCreatedBy")
+  deletedBoards        Board[]           @relation("BoardDeletedBy")
+  createdInviteLinks   BoardInviteLink[]
+
   // Для сортировки списка по умолчанию: ORDER BY created_at, id
   @@index([createdAt, id])
   @@map("users")
+}
+
+// Роли и что им можно: docs/permissions.md
+enum WorkspaceRole {
+  owner
+  editor
+  viewer
+
+  @@map("workspace_role")
+}
+
+// Роль на отдельной доске. Владельца у доски нет: доской управляют владельцы пространства.
+enum BoardRole {
+  editor
+  viewer
+
+  @@map("board_role")
+}
+
+model Workspace {
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  name      String   @db.VarChar(100)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  members WorkspaceMember[]
+  boards  Board[]
+
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  workspaceId String        @map("workspace_id") @db.Uuid
+  userId      String        @map("user_id") @db.Uuid
+  role        WorkspaceRole
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([workspaceId, userId])
+  // Для списка «мои пространства»
+  @@index([userId])
+  @@map("workspace_members")
+}
+
+model Board {
+  id          String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  workspaceId String    @map("workspace_id") @db.Uuid
+  title       String    @db.VarChar(100)
+  createdById String    @map("created_by") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  // Корзина: доска удалена, если deleted_at не NULL
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(3)
+  deletedById String?   @map("deleted_by") @db.Uuid
+
+  // Пространство с досками база удалить не даст. Что делать с досками при удалении пространства, решаем в Б-05.
+  workspace   Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  createdBy   User              @relation("BoardCreatedBy", fields: [createdById], references: [id])
+  deletedBy   User?             @relation("BoardDeletedBy", fields: [deletedById], references: [id])
+  members     BoardMember[]
+  inviteLinks BoardInviteLink[]
+
+  @@index([workspaceId])
+  @@map("boards")
+}
+
+// Роль на отдельной доске: доступ к ней для того, кто не состоит в пространстве (например, по ссылке),
+// или более высокая роль на этой доске для участника пространства. Итоговая роль: большая из двух.
+model BoardMember {
+  boardId   String    @map("board_id") @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  role      BoardRole
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([boardId, userId])
+  @@index([userId])
+  @@map("board_members")
+}
+
+model BoardInviteLink {
+  id          String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  boardId     String    @map("board_id") @db.Uuid
+  // Сам токен не храним: только хэш, по нему ищем ссылку
+  tokenHash   String    @unique @map("token_hash")
+  role        BoardRole
+  createdById String    @map("created_by") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  expiresAt   DateTime? @map("expires_at") @db.Timestamptz(3)
+  revokedAt   DateTime? @map("revoked_at") @db.Timestamptz(3)
+
+  board     Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  createdBy User  @relation(fields: [createdById], references: [id])
+
+  @@index([boardId])
+  @@map("board_invite_links")
 }
