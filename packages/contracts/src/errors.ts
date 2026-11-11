@@ -1,6 +1,14 @@
 import { z } from 'zod';
 
-export const ErrorCodeSchema = z.enum(['VALIDATION_ERROR', 'BAD_REQUEST', 'NOT_FOUND', 'CONFLICT', 'INTERNAL_ERROR']);
+export const ErrorCodeSchema = z.enum([
+  'VALIDATION_ERROR',
+  'BAD_REQUEST',
+  'NOT_FOUND',
+  'CONFLICT',
+  'INTERNAL_ERROR',
+  'UNAUTHORIZED',
+  'FORBIDDEN',
+]);
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 
 export const ApiErrorSchema = z.object({
