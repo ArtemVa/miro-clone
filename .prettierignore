@@ -1,5 +1,6 @@
 pnpm-lock.yaml
 dist
 coverage
+storybook-static
 .turbo
 apps/api/src/generated

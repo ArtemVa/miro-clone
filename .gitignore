@@ -1,12 +1,18 @@
 node_modules
 dist
 coverage
+storybook-static
 .turbo
 *.log
 
 .env
 .env.*
 !.env.example
+# Режим моков фронта: секретов нет, нужен всем (pnpm dev:mocks)
+!apps/web/.env.mocks
 
 # Клиент Prisma, генерируется из apps/api/prisma/schema.prisma
 apps/api/src/generated/
+
+# Локальные заметки фронта (отчёты сессий, todos), в репозиторий не попадают
+apps/web/docs/
