@@ -13,3 +13,6 @@ storybook-static
 
 # Клиент Prisma, генерируется из apps/api/prisma/schema.prisma
 apps/api/src/generated/
+
+# Локальные заметки фронта (отчёты сессий, todos), в репозиторий не попадают
+apps/web/docs/
