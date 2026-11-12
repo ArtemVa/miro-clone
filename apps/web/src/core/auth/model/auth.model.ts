@@ -5,6 +5,8 @@ import { sessionSchema } from './auth.schema';
 import type { PasswordStrength, Session } from './auth.types';
 
 export const authModel = {
+  toAuthorizationHeader: (accessToken: string): string => `Bearer ${accessToken}`,
+
   getPersistedSession: (persisted: unknown): Session | null => {
     const result = z.object({ session: sessionSchema }).safeParse(persisted);
     return result.success ? result.data.session : null;

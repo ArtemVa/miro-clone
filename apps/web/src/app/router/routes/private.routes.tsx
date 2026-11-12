@@ -4,6 +4,7 @@ import { PrivateRoute } from '@/core/auth';
 import { ROUTES } from '@/shared/routes';
 
 import { AppLayout } from '../../layouts/app-layout';
+import { BoardLayout } from '../../layouts/board-layout';
 
 /** Страницы только для авторизованных. Гостя PrivateRoute отправит на вход и вернёт обратно */
 export const privateRoutes: RouteObject = {
@@ -19,6 +20,15 @@ export const privateRoutes: RouteObject = {
         {
           path: ROUTES.SETTINGS.path,
           lazy: () => import('@/pages/settings-page'),
+        },
+      ],
+    },
+    {
+      element: <BoardLayout />,
+      children: [
+        {
+          path: ROUTES.BOARD.path,
+          lazy: () => import('@/pages/board-page'),
         },
       ],
     },

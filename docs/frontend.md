@@ -92,6 +92,7 @@ api → repository → adapter → service → store или useQuery → фас�
 
 - Фронт ходит на свой адрес, CORS не нужен: в dev Vite проксирует `/api` и `/ws` на `VITE_APP_API_PROXY_TARGET` (по умолчанию `http://localhost:3000`), в Docker — nginx.
 - `httpClient` (`src/shared/api/http-client.ts`) с `baseURL` = `API_BASE_URL`. Пути — в `API_URLS` (`src/shared/api/constants.ts`) без префикса: `/auth/login`. Моки собирают полный адрес через `apiUrl(path)` из `src/mocks/lib/http.ts`.
+- Авторизация (`core/auth/lib/auth-interceptor.ts`): на 401 — один `POST /auth/refresh` на все упавшие запросы и повтор запроса. Если refresh вернул 401, берём токен, который успела обновить другая вкладка (cookie общие), и повторяем один раз; нет токена или повтор снова 401 — выход. Сеть и 5xx на refresh сессию не трогают. При загрузке сессию всегда проверяет сервер: `/me` со своим токеном или refresh по cookie, если сохранённой сессии нет. Выход очищает кэш TanStack Query.
 - Ошибка api — контракт `ApiError { code, message, issues? }`: `getApiError`, `getApiErrorMessage`, `getApiErrorStatus`.
 - Форма: `useMutation` + `useForm({ errors: useFormServerErrors(error, DEFAULT_VALUES, fallback) })`. `issues` по полям формы — на поля, остальное — в `root` (`UiAlert` над формой). Кнопка смотрит на `isPending`. Пример — `use-login-page-facade.ts`.
 
@@ -140,7 +141,7 @@ shared/
                 utils (guards), types (Simplify, Loadable), schemas (emailSchema), test
   ui/
     primitives/    компоненты shadcn
-    composables/   UiCard, UiDialog, UiAlert, UiDropdownMenu, UiPopover, UiHoverCard,
+    composables/   UiCard, UiDialog, UiAlert, UiDropdownMenu, UiPopover, UiHoverCard, UiTooltip,
                    StickyNote, Logo, Island, Loader, Spinner, EmptyState, скелетоны
     control-flow/  Show, List, AsyncWrapper, LoaderGate
     errors/        ErrorPageElement, ErrorAlert, ErrorGate
