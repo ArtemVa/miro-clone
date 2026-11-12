@@ -2,7 +2,11 @@
   // Код приложения проверяется по tsconfig.app.json, vite.config.ts — по tsconfig.node.json:
   // у них разное окружение (браузер и Node).
   "files": [],
-  "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" },
+    { "path": "./.storybook/tsconfig.json" }
+  ],
   // Повтор алиаса из tsconfig.app.json: shadcn CLI ищет его здесь
   "compilerOptions": {
     "paths": { "@/*": ["./src/*"] }

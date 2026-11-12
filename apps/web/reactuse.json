@@ -1,0 +1,8 @@
+{
+  "ts": true,
+  "aliases": {
+    "hooks": "@/shared/lib/hooks",
+    "utils": "@/shared/lib/helpers"
+  },
+  "case": "kebab"
+}

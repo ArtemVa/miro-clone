@@ -1,0 +1,8 @@
+{
+  // Отдельный tsconfig: typescript-eslint ищет ближайший tsconfig.json, а в dot-папку через references не заглядывает
+  "extends": "../tsconfig.app.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "../node_modules/.tmp/tsconfig.storybook.tsbuildinfo"
+  },
+  "include": ["main.ts", "preview.tsx"]
+}

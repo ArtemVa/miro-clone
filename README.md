@@ -26,6 +26,8 @@ pnpm db:seed                              # тестовые данные, по 
 pnpm dev                                  # api http://localhost:3000 и web http://localhost:5173
 ```
 
+Фронту `.env` не нужен: у всех его переменных есть значения по умолчанию. Только фронт, без Docker и бэка, на моках — `pnpm --filter @repo/web dev:mocks`, подробнее в [apps/web/README.md](apps/web/README.md).
+
 Сервисы из `docker-compose.yml`:
 
 | Сервис     | Адрес                                                      | Доступ                                   |
@@ -66,6 +68,7 @@ pnpm format          # Prettier по всему репозиторию
 - **zod, typescript, @types/node — через `catalog:`** в `pnpm-workspace.yaml`, чтобы во всём репозитории была одна версия.
 - **api в прод идёт только через бандл** (`tsup`, `apps/api/dist/index.js`): contracts отдаёт сырые `.ts`, и они вшиваются в бандл при сборке. Импорты внутри api пишутся без расширений (`moduleResolution: Bundler`), поэтому запускать результат `tsc` напрямую не получится — и не нужно.
 - **Переменные окружения api** описаны в `apps/api/src/config/env.ts` и проверяются при старте. Новую переменную добавляем туда и в `apps/api/.env.example`. Локально значения лежат в `apps/api/.env`, на сервере — в окружении сервера.
+- **Переменные окружения web** описаны в `apps/web/src/shared/config/env/env-schema.ts`, у каждой есть значение по умолчанию. Список — `apps/web/.env.example`, свои значения — в `apps/web/.env.local`. Все переменные с префиксом `VITE_APP_` попадают в клиентский бандл, секреты туда не кладём.
 - **Переменные из шелла и turbo.** Turbo пропускает в задачи только переменные, перечисленные в `turbo.json`. Если переменную нужно передавать через `pnpm dev` из шелла (как `PORT=4000 pnpm dev`), её добавляют в `passThroughEnv`. На `.env` это не влияет: его api читает сам.
 - **Логи в api** пишем через `logger` из `apps/api/src/common/logger.ts`, а внутри запроса — через `req.log`: к его записям уже привязан id запроса. `console` запрещён правилом ESLint. Данные передаём полями, а не в тексте: `req.log.info({ userId }, 'user created')`, а не `` `user ${userId} created` ``. Уровень задаёт `LOG_LEVEL`. Ошибки 500 отдельно логировать не нужно, их пишет обработчик ошибок. Пароли и заголовки `authorization` и `cookie` скрываются сами, но не глубже одного уровня вложенности (подробнее в `logger.ts`).
 - **Общий конфиг ESLint** — `eslint.config.mjs` в корне. Правила для отдельной папки добавляются туда же блоком с `files`. Он указан в `globalDependencies` в `turbo.json`, поэтому его изменение перезапускает проверки всех пакетов.

@@ -1,15 +1,41 @@
 // @ts-check
+// TypeScript 6 не подключает @types/* сам (types по умолчанию — []), а import.meta.dirname описан в @types/node
+/// <reference types="node" />
 import eslint from '@eslint/js';
 import prettier from 'eslint-config-prettier';
+import boundaries from 'eslint-plugin-boundaries';
+import checkFile from 'eslint-plugin-check-file';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import { defineConfig } from 'eslint/config';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
+// Слои фронта и из каких слоёв каждому можно импортировать (docs/frontend.md)
+const WEB_LAYERS = {
+  app: ['app', 'pages', 'widgets', 'features', 'entities', 'core', 'shared', 'mocks'],
+  pages: ['pages', 'widgets', 'features', 'entities', 'core', 'shared'],
+  widgets: ['widgets', 'features', 'entities', 'core', 'shared'],
+  features: ['features', 'entities', 'core', 'shared'],
+  entities: ['entities', 'core', 'shared'],
+  core: ['core', 'entities', 'shared'],
+  shared: ['shared'],
+  mocks: ['mocks', 'shared'],
+};
+
 // Один конфиг на весь репозиторий. `eslint .` внутри пакета находит его, поднимаясь по папкам вверх.
 export default defineConfig(
-  { ignores: ['**/dist/**', '**/coverage/**', '**/.turbo/**', '**/generated/**'] },
+  {
+    ignores: [
+      '**/dist/**',
+      '**/coverage/**',
+      '**/storybook-static/**',
+      '**/.turbo/**',
+      '**/generated/**',
+      // Генерирует MSW (npx msw init), руками не правим
+      'apps/web/public/mockServiceWorker.js',
+    ],
+  },
   eslint.configs.recommended,
   tseslint.configs.recommended,
   {
@@ -69,6 +95,41 @@ export default defineConfig(
     extends: [reactHooks.configs.flat.recommended, reactRefresh.configs.vite],
     languageOptions: {
       globals: globals.browser,
+    },
+  },
+  {
+    // Архитектура фронта: импорты только из разрешённых слоёв, имена файлов и папок в kebab-case
+    files: ['apps/web/src/**/*.{ts,tsx}'],
+    plugins: { boundaries, 'check-file': checkFile },
+    settings: {
+      // eslint запускают и из apps/web (turbo), и из корня (lint-staged): пути считаем от корня репозитория
+      'boundaries/root-path': import.meta.dirname,
+      'boundaries/elements': Object.keys(WEB_LAYERS).map((layer) => ({
+        type: layer,
+        pattern: `apps/web/src/${layer}/*`,
+      })),
+      'import/resolver': {
+        typescript: { project: `${import.meta.dirname}/apps/web/tsconfig.app.json` },
+      },
+    },
+    rules: {
+      'boundaries/dependencies': [
+        'error',
+        {
+          default: 'disallow',
+          policies: Object.entries(WEB_LAYERS).map(([from, allowed]) => ({
+            from: { element: { type: from } },
+            allow: { to: { element: { types: allowed } } },
+          })),
+        },
+      ],
+      // check-file считает пути от папки, где запущен eslint, поэтому шаблоны начинаются с **/
+      'check-file/filename-naming-convention': [
+        'error',
+        { '**/src/**/*.{ts,tsx}': 'KEBAB_CASE' },
+        { ignoreMiddleExtensions: true },
+      ],
+      'check-file/folder-naming-convention': ['error', { '**/src/**/': 'KEBAB_CASE' }],
     },
   },
   {
