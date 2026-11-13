@@ -4,7 +4,10 @@
 #
 # Значения по умолчанию можно переопределить в файле .env рядом с этим файлом,
 # например POSTGRES_PORT=5433, если 5432 уже занят. Тогда поменяйте порт и в apps/api/.env.
-# Остальные порты: REDIS_PORT, MINIO_PORT, MINIO_CONSOLE_PORT.
+# Остальные порты: REDIS_PORT, MINIO_PORT, MINIO_CONSOLE_PORT, APP_PORT.
+#
+# Всё приложение в контейнерах (миграции, api, фронт с nginx):
+#   docker compose --profile app up -d --build    затем http://localhost:8080
 
 name: miro-clone
 
@@ -73,6 +76,55 @@ services:
     entrypoint: ['sh', '-c']
     command:
       - mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" && mc mb --ignore-existing "local/$$MINIO_BUCKET"
+
+  # Дальше сервисы профиля app. Без --profile app они не запускаются.
+
+  # Одноразовый контейнер: применяет миграции и завершается. api стартует после него.
+  migrate:
+    profiles: [app]
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: migrate
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-app}@postgres:5432/${POSTGRES_DB:-app}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    profiles: [app]
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: runtime
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-app}@postgres:5432/${POSTGRES_DB:-app}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:3000/api/health']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # nginx: отдаёт фронт и проксирует /api и /ws на api
+  web:
+    profiles: [app]
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:${APP_PORT:-8080}:80'
+    depends_on:
+      api:
+        condition: service_healthy
 
 volumes:
   postgres-data:

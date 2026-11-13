@@ -1,0 +1,20 @@
+# Контекст сборки: весь репозиторий. В образ пускаем только то, что нужно для сборки,
+# остальное (локальные заметки, .env, настройки редакторов) отрезаем.
+*
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!.npmrc
+!apps/api
+!apps/web
+!packages
+
+# Зависимости и сборку ставим и собираем внутри образа, локальные не подходят
+**/node_modules
+**/dist
+**/.turbo
+apps/api/src/generated
+
+**/.env
+**/.env.*
+!**/.env.example
